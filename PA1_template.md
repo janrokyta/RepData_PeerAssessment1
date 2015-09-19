@@ -1,20 +1,14 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
-```{r setoptions, echo=FALSE}
-knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
-```
+
 
 This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day. The goal is to analyze the data with emphasis on dealing with missing samples and also difference between weekdays and weekend.
 
 ## Loading and preprocessing the data
 First we have to load the data.
 
-```{r}  
+
+```r
 activity <- read.csv("activity.csv")
 ```
 
@@ -22,49 +16,80 @@ activity <- read.csv("activity.csv")
 
 1. Total number of steps taken per day
 
-```{r}  
+
+```r
 step_date_sum <-  setNames(aggregate(activity$steps, by=list(activity$date), FUN=sum), c("date","total_steps")) 
 ```
 
 2. Histogram of the total number of steps taken each day
 
-```{r}
+
+```r
 hist(step_date_sum$total_steps)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+
 3. Mean and median of the total number of steps taken per day
 
-```{r}
+
+```r
 mean(step_date_sum$total_steps, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(step_date_sum$total_steps, na.rm = TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 ## What is the average daily activity pattern?
 Clear data from NA values, then aggregate steps by interval and plot the graph.
 
-```{r}
+
+```r
 activity_no_na <- na.omit(activity)
 step_interval_sum <- setNames(aggregate(activity_no_na$steps, by=list(activity_no_na$interval), FUN=sum), c("interval","total_steps")) 
 plot(step_interval_sum$interval, step_interval_sum$total_steps, type="l", xlab= "Intervals", ylab= "Number of steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r}
+
+```r
 subset(step_interval_sum, total_steps == max(step_interval_sum$total_steps), select=c(interval, total_steps))
+```
+
+```
+##     interval total_steps
+## 104      835       10927
 ```
 
 ## Imputing missing values
 
 We have to discover the total number of missing values in the dataset. 
 
-```{r}
+
+```r
 nrow(activity[is.na(activity$steps),])
+```
+
+```
+## [1] 2304
 ```
 
 It is necessary to cleanse the data from missing values and replace them with suitable value. Appropriate strategy should be calculating the mean for each interval, then join with original data and replace missing values with relevant interval mean. 
 
-```{r}
+
+```r
 step_interval_mean <- setNames(aggregate(activity_no_na$steps, by=list(activity_no_na$interval), FUN=mean), c("interval","total_steps"))
 activity_mean <- merge(activity, step_interval_mean, by.x = "interval", by.y = "interval")
 activity_mean$steps[is.na(activity_mean$steps)] <- activity_mean$total_steps[is.na(activity_mean$steps)]
@@ -75,15 +100,30 @@ step_date_sum_adj <- setNames(aggregate(activity_adj$steps, by=list(activity_adj
 
 Now it's possible to plot histogram for adjusted data.
 
-```{r}
+
+```r
 hist(step_date_sum_adj$total_steps)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
+
 We can see that mean value does not differ from the estimates from the first part of the report, however median value is different. That is because mean values used instead of NA can't change the mean itself, but new values emerges - in fact, replacing so many missed samples with mean formed a new median, which is now the same as mean.
 
-```{r}
+
+```r
 mean(step_date_sum_adj$total_steps, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(step_date_sum_adj$total_steps, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -91,11 +131,10 @@ median(step_date_sum_adj$total_steps, na.rm = TRUE)
 Adjusting the values types, sorting the data to weekdays or weekend using factor and finally plotting graph for both types.
 
 
-```{r, echo=FALSE, results='hide'}
-Sys.setlocale("LC_TIME", "English")
-```
 
-```{r}
+
+
+```r
 activity_adj$date <- as.Date(activity_adj$date)
 
 wdays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
@@ -108,12 +147,10 @@ step_day_int_mean <- setNames(aggregate(activity_adj$steps, by=list(activity_adj
 
 Using ggplot2 this time.
 
-```{r, echo=FALSE}
-library(data.table)
-require(ggplot2)
-```
 
-```{r graph2, fig.height=6}
+
+
+```r
 ggplot(step_day_int_mean) +
 geom_line(aes(x=interval, y=total_steps)) +
 facet_wrap(~day_type, nrow=2) +
@@ -121,8 +158,10 @@ xlab("Interval") +
 ylab("Number of steps") 
 ```
 
+![](PA1_template_files/figure-html/graph2-1.png) 
+
 We can see that there are some differences in activity patterns, especially distinct peak in the weekdays morning. Inactivity period is similar in both cases.
 
 ## Conclusion
 
-We found out several information regarding activity dataset (total number of steps taken per day with mean and median,...), plotted appropriate graphs, discovered differences between raw and adjusted data (median has changed) and investigated activity patterns during weekdays and weekend (they are slightly different).
+We found out several information regarding activity dataset (total number of steps taken per day with mean and median,...), plotted appropriate graphs, discovered differences between raw and adjusted data and investigated activity patterns during weekdays and weekend.
